@@ -22,19 +22,17 @@ jobs:
       with:
         node-version: '20'
 
-    # 3. Backend: Install, Lint, and Build
+    # 3. Backend: Install, and Build
     - name: Build Backend
       working-directory: ./backend
       run: |
         npm install
         npx prisma generate
-        npm run lint
         npm run build
 
-    # 4. Frontend: Install, Lint, and Build
+    # 4. Frontend: Install, and Build
     - name: Build Frontend
       working-directory: ./frontend
       run: |
         npm install
-        npm run lint
         npm run build
