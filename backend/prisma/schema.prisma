@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  STAFF
+  ADMIN
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+
+  issuesRaised  Issue[]           @relation("RaisedBy")
+  assignments   IssueAssignment[] @relation("AssignedStaff")
+  issueLogs     IssueLog[]
+  comments      Comment[]
+  inviteTokens  InviteToken[]
+}
+
+model Building {
+  id     String  @id @default(uuid())
+  name   String  @unique
+  floors Floor[]
+}
+
+model Floor {
+  id         String   @id @default(uuid())
+  number     Int
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id])
+  rooms      Room[]
+}
+
+model Room {
+  id      String  @id @default(uuid())
+  number  String
+  floorId String
+  floor   Floor   @relation(fields: [floorId], references: [id])
+  issues  Issue[]
+}
+
+model Issue {
+  id          String      @id @default(uuid())
+  title       String
+  description String
+  category    String?
+  department  String?
+  tags        String[]
+  priority    Priority    @default(MEDIUM)
+  status      IssueStatus @default(OPEN)
+
+  roomId     String
+  room       Room   @relation(fields: [roomId], references: [id])
+
+  raisedById String
+  raisedBy   User   @relation("RaisedBy", fields: [raisedById], references: [id])
+
+  assignment IssueAssignment?
+
+  imageUrl    String?
+
+  issueLogs IssueLog[]
+  comments  Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model IssueAssignment {
+  id      String @id @default(uuid())
+  issueId String @unique
+  issue   Issue  @relation(fields: [issueId], references: [id])
+
+  staffId    String
+  staff      User     @relation("AssignedStaff", fields: [staffId], references: [id])
+  assignedAt DateTime @default(now())
+}
+
+model IssueLog {
+  id          String   @id @default(uuid())
+  issueId     String
+  issue       Issue    @relation(fields: [issueId], references: [id])
+  action      String
+  performedBy String
+  performedByUser User @relation(fields: [performedBy], references: [id])
+  note        String?
+  createdAt   DateTime @default(now())
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model InviteToken {
+  id          String    @id @default(uuid())
+  token       String    @unique @default(uuid())
+  email       String
+  name        String
+  role        Role      @default(STAFF)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+}

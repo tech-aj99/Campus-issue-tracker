@@ -1,0 +1,40 @@
+name: CampusTrack CI Pipeline
+
+# Trigger this workflow on every push to the main branch
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout the code from GitHub
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # 2. Setup Node.js environment
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    # 3. Backend: Install, Lint, and Build
+    - name: Build Backend
+      working-directory: ./backend
+      run: |
+        npm install
+        npx prisma generate
+        npm run lint
+        npm run build
+
+    # 4. Frontend: Install, Lint, and Build
+    - name: Build Frontend
+      working-directory: ./frontend
+      run: |
+        npm install
+        npm run lint
+        npm run build
